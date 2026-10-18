@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  helpers:
+    name: Helpers (${{ matrix.os }}, Python ${{ matrix.python }}, ${{ matrix.deps }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {os: ubuntu-latest, python: '3.12', deps: latest}
+          - {os: macos-latest, python: '3.12', deps: latest}
+          - {os: windows-latest, python: '3.12', deps: latest}
+          - {os: ubuntu-latest, python: '3.10', deps: minimum}
+          - {os: ubuntu-latest, python: '3.14', deps: latest}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install -r requirements-dev.txt
+      - if: matrix.deps == 'minimum'
+        run: python -m pip install 'PyMuPDF==1.24.3' 'Pillow==10.0.0'
+      - run: python -m pip list
+      - run: python tools/validate_skill.py
+      - run: python -m unittest discover -s tests -v
+      - run: python tools/build_release.py
+
+  native:
+    name: Native codec and independent renderer
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      MRC_REQUIRE_NATIVE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+      - name: Install native dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y autoconf automake libtool libleptonica-dev libpng-dev qpdf poppler-utils
+          git clone --depth 1 --branch 0.32 https://github.com/agl/jbig2enc.git "$RUNNER_TEMP/jbig2enc"
+          cd "$RUNNER_TEMP/jbig2enc"
+          ./autogen.sh
+          ./configure
+          make -j2
+          sudo make install
+      - run: python -m pip install -r requirements-dev.txt
+      - run: python -m pip list
+      - run: python tools/validate_skill.py
+      - run: python -m unittest discover -s tests -v
+
+  package:
+    name: Release archive
+    needs: [helpers, native]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+      - name: Check tag version
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: test "$RELEASE_TAG" = "v$(cat VERSION)"
+      - run: python tools/build_release.py
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: pdf-mrc-compression
+          path: |
+            dist/*.zip
+            dist/SHA256SUMS
+          if-no-files-found: error

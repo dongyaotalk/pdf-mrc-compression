@@ -1,0 +1,29 @@
+# Local documents, historical experiments, and generated outputs
+/output/
+/.mrc-work/
+/tmp/
+/dist/
+*.pdf
+*.jb2
+*.zip
+*.log
+
+# Python environments and caches
+.venv*/
+.uv-cache/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Local settings and secrets
+.env
+.env.*
+!.env.example
+.codex/
+.agents/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

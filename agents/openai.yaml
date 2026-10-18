@@ -1,0 +1,4 @@
+interface:
+  display_name: "扫描 PDF MRC 压缩"
+  short_description: "评估扫描 PDF，优化文字、插图、灰条、体积与翻页速度并验证画面"
+  default_prompt: "使用 $pdf-mrc-compression 评估并压缩这份扫描 PDF，保留彩色插图，比较体积、画面和渲染速度。"

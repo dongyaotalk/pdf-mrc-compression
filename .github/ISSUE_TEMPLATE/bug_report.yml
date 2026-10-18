@@ -1,0 +1,24 @@
+name: Bug report / 问题反馈
+description: Report a reproducible skill or helper-script problem.
+body:
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment / 环境
+      description: OS, Python, package versions, and relevant native tool versions.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps and command / 复现步骤
+      description: Prefer a small synthetic example. Remove private paths and credentials.
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Expected and actual result / 预期与实际结果
+      description: Include relevant error output and the comparison scope or quality baseline.
+    validations:
+      required: true
