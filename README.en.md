@@ -2,6 +2,13 @@
 
 [简体中文](README.md) · [Skill instructions](SKILL.md) · [Releases](https://github.com/dongyaotalk/pdf-mrc-compression/releases)
 
+Current version: **[v0.2.0](https://github.com/dongyaotalk/pdf-mrc-compression/releases/tag/v0.2.0)** · [Download ZIP](https://github.com/dongyaotalk/pdf-mrc-compression/releases/download/v0.2.0/pdf-mrc-compression-0.2.0.zip) · [SHA256SUMS](https://github.com/dongyaotalk/pdf-mrc-compression/releases/download/v0.2.0/SHA256SUMS)
+
+**New in v0.2.0: visible PDF backups.** Before editing an existing PDF, save an
+independent copy in `pdf-mrc-backups/` beside the input, verify its size and SHA-256,
+and retain stage and recovery records. See the [backup guide](references/backups-and-work-files.md)
+and [changelog](CHANGELOG.md).
+
 A Codex skill for scanned-PDF Mixed Raster Content (MRC) compression, image repairs,
 and measured tradeoffs between size, fidelity, and rendering speed. The skill
 instructions and detailed references are written in Chinese; the Python CLIs
@@ -24,9 +31,8 @@ git clone https://github.com/dongyaotalk/pdf-mrc-compression.git \
   "${CODEX_HOME:-$HOME/.codex}/skills/pdf-mrc-compression"
 ```
 
-Alternatively, download the versioned ZIP from
-[Releases](https://github.com/dongyaotalk/pdf-mrc-compression/releases), verify it
-against `SHA256SUMS`, and extract its `pdf-mrc-compression` directory into your
+Alternatively, download the [v0.2.0 ZIP](https://github.com/dongyaotalk/pdf-mrc-compression/releases/download/v0.2.0/pdf-mrc-compression-0.2.0.zip), verify it
+against [SHA256SUMS](https://github.com/dongyaotalk/pdf-mrc-compression/releases/download/v0.2.0/SHA256SUMS), and extract its `pdf-mrc-compression` directory into your
 skills directory. Reopen Codex and invoke it in a new chat:
 
 ```text
@@ -35,6 +41,16 @@ and compare representative samples for size, fidelity, and rendering speed.
 ```
 
 See the [Chinese README](README.md) for PowerShell installation commands.
+
+## Update an existing installation
+
+- **Git installation:** run `git status --short` in the actual skill directory.
+  After preserving any local changes, update a clean checkout with `git pull --ff-only`.
+- **ZIP installation:** download the ZIP above, verify `SHA256SUMS`, preserve your
+  customizations, and replace the old `pdf-mrc-compression` folder with the new one.
+  Existing Python and native dependencies do not need to be downloaded again.
+- Reopen Codex and use the skill in a new chat. Existing PDFs, historical backups,
+  and encoding caches are not automatically moved or deleted.
 
 ## Example prompts
 

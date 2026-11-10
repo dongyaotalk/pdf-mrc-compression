@@ -2,13 +2,20 @@
 
 [English](README.en.md) · [Skill 入口](SKILL.md) · [版本下载](https://github.com/dongyaotalk/pdf-mrc-compression/releases)
 
-面向 Codex 的扫描 PDF MRC 压缩 skill，包含分层策略、画面修复经验，以及可单独运行的审计、像素比对和 JBIG2 区域编码脚本。
+当前版本：**[v0.2.0](https://github.com/dongyaotalk/pdf-mrc-compression/releases/tag/v0.2.0)** · [下载 ZIP](https://github.com/dongyaotalk/pdf-mrc-compression/releases/download/v0.2.0/pdf-mrc-compression-0.2.0.zip) · [SHA256SUMS](https://github.com/dongyaotalk/pdf-mrc-compression/releases/download/v0.2.0/SHA256SUMS)
+
+**v0.2.0 新增可见 PDF 备份：** 修改已有文件前，将独立备份保存到输入 PDF 同级的
+`pdf-mrc-backups/`，校验大小和 SHA-256，并保留阶段及恢复记录。
+详情见 [备份工具与位置规则](references/backups-and-work-files.md) 和 [变更记录](CHANGELOG.md)。
+
+面向 Codex 的扫描 PDF MRC 压缩 skill，包含分层策略、画面修复经验，以及可单独运行的审计、可见备份、像素比对和 JBIG2 区域编码脚本。
 
 它帮助在文件体积、字形、插图颜色和阅读速度之间作出可验证的选择。**随附脚本不是整本一键 MRC 分割器**；自动分层实现需要根据实际书页编排。
 
 ## 能做什么
 
 - 审计图像、蒙版、共享资源、页面几何、有效 DPI 和编码体积。
+- 修改已有 PDF 前，在输入文件旁保存可见、独立且经过校验的备份。
 - 指导扫描页的 MRC 分层，处理文字粘连、插图漏抠、灰条和灰色题字。
 - 对已有 MRC 文件尝试结构、编码及资源复用优化，并比较渲染速度。
 - 比对页面渲染、原生图像与蒙版，检查文字、书签、链接和部分交互信息。
@@ -39,12 +46,20 @@ New-Item -ItemType Directory -Force $skillDir | Out-Null
 git clone https://github.com/dongyaotalk/pdf-mrc-compression.git (Join-Path $skillDir 'pdf-mrc-compression')
 ```
 
-也可从 [Releases](https://github.com/dongyaotalk/pdf-mrc-compression/releases) 下载 ZIP，核对同页的 `SHA256SUMS`，将其中的 `pdf-mrc-compression` 文件夹放入上述目录。重新打开 Codex 后，在新对话中使用：
+也可下载 [v0.2.0 ZIP](https://github.com/dongyaotalk/pdf-mrc-compression/releases/download/v0.2.0/pdf-mrc-compression-0.2.0.zip)，核对同页的 [SHA256SUMS](https://github.com/dongyaotalk/pdf-mrc-compression/releases/download/v0.2.0/SHA256SUMS)，将其中的 `pdf-mrc-compression` 文件夹放入上述目录。重新打开 Codex 后，在新对话中使用：
 
 ```text
 使用 $pdf-mrc-compression 评估这份扫描 PDF，保留彩色插图，
 先做代表性样本，再比较体积、画面和渲染速度。
 ```
+
+## 更新已安装的 skill
+
+- **通过 Git 安装：** 在实际的 skill 安装目录先运行 `git status --short`，确认没有
+  未保存的本地修改后运行 `git pull --ff-only`。
+- **通过 ZIP 安装：** 下载上方新版 ZIP 并核对 `SHA256SUMS`；保留自己修改过的内容，
+  用新版的 `pdf-mrc-compression` 文件夹替换旧版。无需重新下载 Python 或原生依赖。
+- 更新后重新打开 Codex，并在新对话中使用 skill。已有 PDF、历史备份和编码缓存不会自动搬动或删除。
 
 ## 使用提示词样例
 
