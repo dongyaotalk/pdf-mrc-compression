@@ -40,19 +40,23 @@ python tools/build_release.py
 
 ## 发布
 
-1. 修改 `VERSION` 与 `CHANGELOG.md`，完成上述检查。
+1. 修改 `VERSION` 与 `CHANGELOG.md`，同步中英文 README 首页的版本、功能摘要、
+   ZIP/校验文件下载入口及升级说明，完成上述检查。
 2. 合并到 `main`，等待 [CI](https://github.com/dongyaotalk/pdf-mrc-compression/actions/workflows/ci.yml) 全部通过。
 3. 运行 `python tools/build_release.py`，检查 `dist/` 中 ZIP 与 `SHA256SUMS`。
-4. 为已经通过 CI 的提交创建并推送对应 tag，然后用 `gh` 发布：
+4. 为已经通过 CI 的提交创建并推送对应 tag，然后用 `gh` 发布 ZIP 和校验文件，
+   确认 Release 为正式发布且标记为 Latest：
 
 ```bash
-git tag -a v0.1.0 -m 'Release v0.1.0'
-git push origin v0.1.0
-gh release create v0.1.0 dist/pdf-mrc-compression-0.1.0.zip dist/SHA256SUMS \
-  --verify-tag --title 'v0.1.0' --notes-file /path/to/release-notes.md
+git tag -a v0.2.0 -m 'Release v0.2.0'
+git push origin v0.2.0
+gh release create v0.2.0 dist/pdf-mrc-compression-0.2.0.zip dist/SHA256SUMS \
+  --verify-tag --latest --title 'v0.2.0' --notes-file /path/to/release-notes.md
 ```
 
 将示例版本与 release notes 路径替换为本次实际值。GitHub 发布由维护者显式执行；
 CI 只验证和构建，不自动创建 release。打包程序采用文件白名单和固定 ZIP 元数据，
 不会递归打包工作目录。相同源码在同一 Python/zlib 版本下重复构建应产生相同哈希。
 ZIP 只包含 skill、辅助脚本、参考资料及用户文档，不包含依赖二进制或测试产物。
+发布后核对公开版本页、两个附件与 README 下载链接；下载附件验证 SHA-256，
+不要把仅合并源码或上传 CI artifact 当作已经发布 Release。
