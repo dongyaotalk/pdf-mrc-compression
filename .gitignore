@@ -1,6 +1,7 @@
 # Local documents, historical experiments, and generated outputs
 /output/
 /.mrc-work/
+pdf-mrc-backups/
 /tmp/
 /dist/
 *.pdf

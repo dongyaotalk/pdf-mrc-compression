@@ -24,6 +24,16 @@ description: 评估和压缩扫描彩色、灰度 PDF，使用 MRC 混合栅格�
 - 保护彩色插图、照片、灰色题字和封面的原色。不要为加黑正文给整页拉对比度。局部文字处理也要检查原本就不是纯黑的笔画。
 - 原文件保留，新建输出。体积目标要明确是十进制 MB 还是 MiB；没有指定目标时不自行套用“100 MB”。不承诺所有扫描件都适合 MRC。
 
+## 备份与工作文件
+
+- 原件不变、另存新成品时，不额外复制整本原件。需要修改或替换已有 PDF 时，先把
+  被修改文件备份到输入 PDF 同级的可见 `pdf-mrc-backups/` 目录，成功后再写入。
+- 使用 [备份工具](scripts/backup_pdf.py) 或遵守相同位置规则的编排；备份位置以输入
+  文件为准，不默认落到 `.mrc-work/`、其他隐藏目录、代码仓库或 skill 安装目录。
+  备份失败时停止修改，不悄悄换到其他位置。
+- 自写批处理也遵守此规则。交付时列出实际成品、备份和工作目录；阶段记录、
+  恢复信息及缓存区别见 [备份与工作文件位置](references/backups-and-work-files.md)。
+
 ## 工作路径
 
 1. **审计文件。** 检查页数、页面框、旋转、原生文字/矢量、OCR、图像尺寸及有效 DPI、编码、蒙版、共享资源和主要体积来源。优先解码已有原生扫描图，不反复渲染整页重采样。可运行下方的审计脚本。
@@ -53,11 +63,13 @@ description: 评估和压缩扫描彩色、灰度 PDF，使用 MRC 混合栅格�
 
 ```bash
 python scripts/audit_pdf.py input.pdf --output audit.json
+python scripts/backup_pdf.py input.pdf --stage before-bookmarks
 python scripts/verify_lossless.py before.pdf after.pdf --dpi 96 --native-images --report verify.json
 python scripts/encode_jbig2_region.py black-on-white.png mask.jb2
 ```
 
 - `audit_pdf.py`：只读；按唯一图像/蒙版对象统计编码体积、引用次数及逐页情况。资源可达性不等于实际可见面积，不能仅凭列表自动删除内容。
+- `backup_pdf.py`：修改已有 PDF 前的独立字节备份；默认放在输入文件同级的可见目录，回读校验大小和 SHA-256 后输出路径及恢复记录。仅需 Python 标准库，不编辑 PDF。
 - `verify_lossless.py`：严格比较所有页的指定 DPI 渲染、页面框、旋转、文字、元数据和书签，并计时。`--native-images` 适用于页面资源名和原生图像尺寸未变化的编码优化，额外逐一比较图片及显式蒙版的原生解码像素；同一页有重名资源会明确拒绝这种匹配，需按 Form 路径另建映射。单一 DPI 的渲染相同不等于任意比例下的严格无损。
 - `encode_jbig2_region.py`：可选的体积优化器；把黑字白底的二值图编码为单个裁剪 generic 区域，但在 JBIG2 内保留全画布尺寸和整数像素偏移。不会重新二值化或替换字形。依赖特定可识别的编码器段结构；不兼容时停止，不能猜偏移。嵌入 PDF 后仍需验证蒙版极性、原生像素和至少两种渲染器。
 

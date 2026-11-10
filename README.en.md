@@ -7,8 +7,8 @@ and measured tradeoffs between size, fidelity, and rendering speed. The skill
 instructions and detailed references are written in Chinese; the Python CLIs
 provide English help and diagnostics.
 
-Includes three standalone helpers: PDF resource auditing, pixel comparison, and
-lossless generic JBIG2 region encoding. **This is not a turnkey whole-book MRC
+Includes four standalone helpers: PDF resource auditing, visible backups, pixel comparison,
+and lossless generic JBIG2 region encoding. **This is not a turnkey whole-book MRC
 segmenter.** Segmentation and protected illustration regions must be tailored to
 the actual pages.
 
@@ -113,6 +113,16 @@ Save output/book-covers.pdf, update bookmarks and links affected by inserted pag
 
 ## Dependencies and CLI use
 
+Before modifying an existing PDF (for example, its bookmarks or page labels),
+save the backup in a **visible `pdf-mrc-backups/` directory beside the input PDF**.
+Do not put persistent PDF backups in hidden work directories or the skill installation.
+`backup_pdf.py` preserves the filename, creates a unique stage directory for each call,
+independently verifies the copy's size and SHA-256, and reports its actual path with a
+`backup.json` recovery record. Stop the PDF edit if backup fails; do not fall back to
+another location. No extra original copy is needed when writing a new output without
+changing the input. Existing backups are not automatically moved or deleted.
+See [backup and work-file locations](references/backups-and-work-files.md).
+
 Use Python 3.10+ and install the Python packages in `requirements.txt`. Native tools
 are installed separately. See [environment and dependency guidance](references/environment-and-dependencies.md)
 for Windows, Linux, and macOS.
@@ -121,6 +131,7 @@ for Windows, Linux, and macOS.
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
 .venv/bin/python scripts/audit_pdf.py input.pdf --output audit.json
+.venv/bin/python scripts/backup_pdf.py input.pdf --stage before-bookmarks
 .venv/bin/python scripts/verify_lossless.py before.pdf after.pdf --dpi 96 --native-images --report verify.json
 .venv/bin/python scripts/encode_jbig2_region.py binary.png mask.jb2
 ```
@@ -128,6 +139,7 @@ python3 -m venv .venv
 On Windows, use `py -3 -m venv .venv` and `.venv\Scripts\python.exe`.
 All scripts support `--help`. Auditing and comparison require PyMuPDF; encoding
 requires Pillow and the `jbig2` executable from jbig2enc.
+The backup helper needs only Python's standard library and never modifies the PDF.
 
 The encoder accepts black ink (0) on white paper (255). It never thresholds gray
 pixels or substitutes symbols. Its output is a PDF-ready stream, not a PDF or
@@ -147,6 +159,7 @@ rasterizing them just to apply MRC.
 ## References and development
 
 Start with [SKILL.md](SKILL.md), then read the relevant references on
+[backups and work files](references/backups-and-work-files.md),
 [segmentation](references/segmentation-and-repairs.md),
 [lossless optimization and speed](references/lossless-and-speed.md), or
 [covers](references/covers.md). The [case study](references/case-study.md) contains

@@ -14,9 +14,11 @@ FILES = (
     'tools/validate_skill.py', 'tools/build_release.py',
     '.github/workflows/ci.yml',
     'scripts/audit_pdf.py', 'scripts/verify_lossless.py', 'scripts/encode_jbig2_region.py',
+    'scripts/backup_pdf.py',
     'references/environment-and-dependencies.md', 'references/segmentation-and-repairs.md',
     'references/lossless-and-speed.md', 'references/covers.md', 'references/case-study.md',
-    'tests/test_helpers.py', 'tests/test_release.py',
+    'references/backups-and-work-files.md',
+    'tests/test_helpers.py', 'tests/test_release.py', 'tests/test_backup.py',
 )
 
 
