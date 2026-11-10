@@ -122,6 +122,13 @@ git clone https://github.com/dongyaotalk/pdf-mrc-compression.git (Join-Path $ski
 
 ## 运行依赖和脚本
 
+需要修改已有 PDF（例如书签或页码标签）时，备份放在**输入文件同级的可见
+`pdf-mrc-backups/` 目录**，不放进隐藏工作目录或 skill 安装目录。
+`backup_pdf.py` 保留文件名，为每次调用建立独立的阶段目录，回读校验大小和 SHA-256，
+并输出实际路径和 `backup.json` 恢复记录。备份失败时停止后续修改，不回退到其他位置。
+原件不变、另存新成品时无需额外复制整本原件。
+详见 [备份与工作文件位置](references/backups-and-work-files.md)；历史备份不会自动搬动或删除。
+
 使用 Python 3.10 或更高版本；发布检查覆盖的组合见 [CI](.github/workflows/ci.yml)。
 Python 包和外部程序均需另行安装，完整的 Windows、Linux、macOS 说明见
 [环境与依赖](references/environment-and-dependencies.md)。
@@ -132,16 +139,18 @@ Python 包和外部程序均需另行安装，完整的 Windows、Linux、macOS 
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
 .venv/bin/python scripts/audit_pdf.py input.pdf --output audit.json
+.venv/bin/python scripts/backup_pdf.py input.pdf --stage before-bookmarks
 .venv/bin/python scripts/verify_lossless.py before.pdf after.pdf --dpi 96 --native-images --report verify.json
 .venv/bin/python scripts/encode_jbig2_region.py black-on-white.png mask.jb2
 ```
 
 Windows 使用 `py -3 -m venv .venv`，将 `.venv/bin/python` 换成 `.\.venv\Scripts\python.exe`。
-路径有空格时加引号。三个脚本均提供 `--help`。
+路径有空格时加引号。四个脚本均提供 `--help`。
 
 | 工具 | 用途与依赖 |
 |---|---|
 | `audit_pdf.py` | 只读 JSON 审计；需要 PyMuPDF |
+| `backup_pdf.py` | 在输入文件旁保存独立备份及恢复记录；仅需 Python 标准库 |
 | `verify_lossless.py` | 相同返回 `0`，不一致或失败返回 `1`，参数错误返回 `2`；需要 PyMuPDF |
 | `encode_jbig2_region.py` | 二值图 → 可嵌入 PDF 的 `.jb2` 码流；需要 Pillow 和 `jbig2enc` 的 `jbig2` |
 | `qpdf`、Poppler | PDF 结构检查和独立渲染验证；不由上述脚本自动执行 |
@@ -154,6 +163,7 @@ Windows 使用 `py -3 -m venv .venv`，将 `.venv/bin/python` 换成 `.\.venv\Sc
 
 - [工作流程与质量边界](SKILL.md)
 - [依赖与跨平台运行](references/environment-and-dependencies.md)
+- [备份与工作文件位置](references/backups-and-work-files.md)
 - [分层和画面修复](references/segmentation-and-repairs.md)
 - [无损优化和渲染速度](references/lossless-and-speed.md)
 - [封面与页面几何](references/covers.md)

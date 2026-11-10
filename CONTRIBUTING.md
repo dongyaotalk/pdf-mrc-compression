@@ -18,7 +18,8 @@ python tools/build_release.py
 `validate_skill.py` 检查 skill frontmatter、界面元数据、本地文档链接与版本。
 若安装了 Codex 的 `skill-creator`，还可运行其 `quick_validate.py`。
 `unittest` 覆盖共享图像计数、画面或原生像素改变、页面几何、导航与交互信息、
-输出保护、编码器输入边界和发布包内容。所有样本都由测试生成，不提交书籍扫描。
+输出保护、输入文件旁的可见备份与失败保护、编码器输入边界和发布包内容。
+所有样本都由测试生成，不提交书籍扫描。
 
 安装 `jbig2enc`、`qpdf`、Poppler 后，设置 `MRC_REQUIRE_NATIVE=1` 再运行同一套测试，
 可将缺少原生工具的情况视为失败。Linux CI 使用此模式，实际编码黑白、空白、
