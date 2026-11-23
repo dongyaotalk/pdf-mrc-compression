@@ -31,6 +31,7 @@ python tools/build_release.py
 最低依赖组合另在 Linux/Python 3.10 测试。
 macOS CI 使用官方标准 `macos-15-intel` runner，保留 macOS 测试门槛；
 切换原因是 ARM 托管容量不足导致作业在多次尝试后仍未被领取。
+Intel 作业解析该平台可用的最新 PyMuPDF/Pillow wheel，避免缺少 Intel wheel 的新版触发完整 C/C++ 源码构建；Linux/Windows 最新依赖及 Linux 最低依赖检查保留。
 这不代表当前版本已覆盖所有 macOS 架构；runner 标签见
 [GitHub 官方说明](https://docs.github.com/en/actions/reference/runners/github-hosted-runners)。
 
