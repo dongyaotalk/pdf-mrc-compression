@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 
 import pymupdf as fitz
-from book_utils import check_edit_paths, page_number, read_plan, save_pdf
+from book_utils import check_edit_paths, open_pdf, page_number, read_plan, save_pdf
 
 
 def apply_navigation(doc, plan):
@@ -65,7 +65,7 @@ def main():
     try:
         plan = read_plan(args.plan, ('bookmarks', 'labels'))
         check_edit_paths(args.input, args.output, args.plan, args.session)
-        with fitz.open(args.input) as doc:
+        with open_pdf(args.input) as doc:
             result = apply_navigation(doc, plan)
             result.update(save_pdf(doc, args.input, args.output, args.session))
             result['validation'] = 'plan checked; output not independently validated'

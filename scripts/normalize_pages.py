@@ -7,7 +7,7 @@ import re
 from pathlib import Path
 
 import pymupdf as fitz
-from book_utils import check_edit_paths, page_number, read_plan, save_pdf
+from book_utils import check_edit_paths, open_pdf, page_number, read_plan, save_pdf
 
 
 def size_pair(value):
@@ -129,7 +129,7 @@ def main():
     try:
         check_edit_paths(args.input, args.output, args.plan, args.session)
         plan = read_plan(args.plan, ('size', 'pages', 'scan_repairs'))
-        with fitz.open(args.input) as doc:
+        with open_pdf(args.input) as doc:
             result = normalize(doc, plan)
             result['write'] = save_pdf(doc, args.input, args.output, args.session)
         print(json.dumps(result, ensure_ascii=True, indent=2))

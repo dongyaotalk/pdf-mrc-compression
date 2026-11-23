@@ -14,7 +14,7 @@ import shutil
 
 import pymupdf as fitz
 from PIL import Image, ImageChops, TiffImagePlugin, features
-from book_utils import check_edit_paths, page_number, read_plan, save_pdf
+from book_utils import check_edit_paths, open_pdf, page_number, read_plan, save_pdf
 from encode_jbig2_region import encode_region
 
 ALGORITHM = 'native-scans-v1'
@@ -291,7 +291,7 @@ def main():
     try:
         check_edit_paths(args.input, args.output, args.plan, args.session)
         plan = read_plan(args.plan, ('pages', 'codec', 'threshold', 'protect_gray', 'max_gray_pixels'))
-        with fitz.open(args.input) as doc:
+        with open_pdf(args.input) as doc:
             report = compress(doc, plan, args.cache, args.jbig2, not args.skip_validation)
             report['write'] = save_pdf(doc, args.input, args.output, args.session)
         print(json.dumps(report, ensure_ascii=True, indent=2))

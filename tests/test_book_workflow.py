@@ -57,7 +57,19 @@ class BookPlans(unittest.TestCase):
                 {'page': 1, 'style': 'A'}, {'page': 4, 'style': 'R'},
                 {'page': 7, 'style': 'D', 'first': 773}]})
             self.assertEqual(doc.get_toc(False), before)
-            self.assertEqual([p.get_label() for p in doc], ['A', 'B', 'C', 'I', 'II', 'III', '773', '774', '775'])
+            expected_rules = [
+                {'startpage': 0, 'style': 'A', 'firstpagenum': 1, 'prefix': ''},
+                {'startpage': 3, 'style': 'R', 'firstpagenum': 1, 'prefix': ''},
+                {'startpage': 6, 'style': 'D', 'firstpagenum': 773, 'prefix': ''}]
+            self.assertEqual(doc.get_page_labels(), expected_rules)
+            # 1.24.3 integerToLetter(1) returns B, but the written PDF
+            # correctly uses /S /A with /St 1 (or its default). Do not
+            # corrupt the PDF by compensating for that reader-only bug.
+            if fitz.VersionBind != '1.24.3':
+                self.assertEqual([p.get_label() for p in doc][:3], ['A', 'B', 'C'])
+            self.assertEqual([doc[p].get_label() for p in range(3, 9)], ['I', 'II', 'III', '773', '774', '775'])
+            with fitz.open(stream=doc.tobytes(), filetype='pdf') as saved:
+                self.assertEqual(saved.get_page_labels(), expected_rules)
             self.assertEqual(doc.xref_stream_raw(doc[0].get_images()[0][0]), raw)
             set_navigation.apply_navigation(doc, {'bookmarks': [
                 {'level': 1, 'title': '封面', 'page': 1},
@@ -125,11 +137,11 @@ class BookPlans(unittest.TestCase):
         with scan_doc(Image.new('L', (10, 10), 255)) as doc:
             doc.save(source)
         original = source.read_bytes()
-        with fitz.open(source) as doc:
+        with book_utils.open_pdf(source) as doc:
             book_utils.save_pdf(doc, source, output, session)
         self.assertFalse((self.root / 'pdf-mrc-backups').exists())
         for value in ('one', 'two'):
-            with fitz.open(output) as doc:
+            with book_utils.open_pdf(output) as doc:
                 doc.set_metadata({'title': value})
                 book_utils.save_pdf(doc, output, output, session)
         self.assertEqual(len(list((self.root / 'pdf-mrc-backups').iterdir())), 1)
@@ -137,7 +149,7 @@ class BookPlans(unittest.TestCase):
             doc.set_metadata({'title': 'external'})
             changed = doc.tobytes()
         output.write_bytes(changed)
-        with fitz.open(output) as doc:
+        with book_utils.open_pdf(output) as doc:
             book_utils.save_pdf(doc, output, output, session)
         self.assertEqual(len(list((self.root / 'pdf-mrc-backups').iterdir())), 2)
         self.assertEqual(source.read_bytes(), original)

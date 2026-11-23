@@ -1,4 +1,5 @@
 """Shared bounded-plan and atomic-output mechanics (Python 3.10+)."""
+from contextlib import contextmanager
 import hashlib
 import json
 import os
@@ -37,8 +38,20 @@ def check_edit_paths(source, output, plan, session=None):
         raise ValueError('Session must be separate from inputs, output and plan')
 
 
+@contextmanager
+def open_pdf(path):
+    # Lazy import keeps standard-library backup/cleanup tools independent.
+    import pymupdf
+    doc = pymupdf.open(path)
+    try:
+        yield doc
+    finally:
+        if not doc.is_closed:
+            doc.close()
+
+
 def save_pdf(doc, source, output, session=None):
-    """Atomic save; existing targets get a visible backup, reusable per session.
+    """Consume/close doc and save atomically with visible backup reuse.
 
     A session is local task state, never a substitute for the independently
     verified backup. An external edit invalidates reuse.
@@ -77,6 +90,8 @@ def save_pdf(doc, source, output, session=None):
     try:
         # PDF_ENCRYPT_KEEP == 0; preserve source encryption rather than remove it.
         doc.save(temp, garbage=0, deflate=False, encryption=0)
+        # Windows cannot replace an input PDF while MuPDF holds it open.
+        doc.close()
         os.replace(temp, output)
     finally:
         Path(temp).unlink(missing_ok=True)
