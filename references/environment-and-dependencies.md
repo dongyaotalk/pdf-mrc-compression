@@ -7,9 +7,9 @@
 | 依赖 | 需要它的功能 | 必需程度 |
 |---|---|---|
 | Python 3.10+ | 所有随附脚本 | 必需；实际平台和版本验证范围见仓库 CI，其他组合以包支持和小样结果为准 |
-| Python 标准库 | `backup_pdf.py` 的可见备份、字节复制与 SHA-256 校验 | 仅备份时无需安装下列 PDF、图像或原生依赖 |
-| PyMuPDF，安装名 `PyMuPDF`，导入名 `pymupdf` | PDF 资源审计、逐页及原生图片比对 | 运行 `audit_pdf.py`、`verify_lossless.py` 必需 |
-| Pillow，安装名 `Pillow`，导入名 `PIL` | 二值 PNG 输入和区域编码；部分图像处理 | 运行 `encode_jbig2_region.py` 必需 |
+| Python 标准库 | `backup_pdf.py` 的可见备份、字节复制与 SHA-256 校验，以及 `cleanup_outputs.py` | 仅备份/清理时无需安装下列 PDF、图像或原生依赖 |
+| PyMuPDF，安装名 `PyMuPDF`，导入名 `pymupdf` | PDF 资源审计、逐页及原生图片比对 | 审计、比对、几何、扫描压缩和导航工具必需 |
+| Pillow，安装名 `Pillow`，导入名 `PIL` | 二值 PNG 输入和区域编码；部分图像处理 | 区域编码和 `compress_scans.py` 必需 |
 | `jbig2enc` 提供的 `jbig2` 可执行文件 | 无字形替换的 generic JBIG2 蒙版编码 | 采用 JBIG2 策略时必需；不是 Python 包 |
 | `qpdf` 可执行文件 | 对象流/Flate 整理、PDF 结构检查 | 该优化及完整交付的结构检查需要 |
 | Poppler 的 `pdftoppm`；`pdfinfo` 可辅助检查 | 与 PyMuPDF 独立的渲染验证、页面信息 | 完整交付的独立渲染检查需要 `pdftoppm` |

@@ -14,11 +14,14 @@ FILES = (
     'tools/validate_skill.py', 'tools/build_release.py',
     '.github/workflows/ci.yml',
     'scripts/audit_pdf.py', 'scripts/verify_lossless.py', 'scripts/encode_jbig2_region.py',
-    'scripts/backup_pdf.py',
+    'scripts/backup_pdf.py', 'scripts/book_utils.py',
+    'scripts/normalize_pages.py', 'scripts/set_navigation.py',
+    'scripts/compress_scans.py', 'scripts/cleanup_outputs.py',
     'references/environment-and-dependencies.md', 'references/segmentation-and-repairs.md',
     'references/lossless-and-speed.md', 'references/covers.md', 'references/case-study.md',
-    'references/backups-and-work-files.md',
-    'tests/test_helpers.py', 'tests/test_release.py', 'tests/test_backup.py',
+    'references/backups-and-work-files.md', 'references/page-geometry.md',
+    'references/navigation-and-labels.md', 'references/book-workflow.md',
+    'tests/test_helpers.py', 'tests/test_release.py', 'tests/test_backup.py', 'tests/test_book_workflow.py',
 )
 
 

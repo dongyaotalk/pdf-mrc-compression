@@ -2,19 +2,20 @@
 
 [English](README.en.md) · [Skill 入口](SKILL.md) · [版本下载](https://github.com/dongyaotalk/pdf-mrc-compression/releases)
 
-当前版本：**[v0.2.0](https://github.com/dongyaotalk/pdf-mrc-compression/releases/tag/v0.2.0)** · [下载 ZIP](https://github.com/dongyaotalk/pdf-mrc-compression/releases/download/v0.2.0/pdf-mrc-compression-0.2.0.zip) · [SHA256SUMS](https://github.com/dongyaotalk/pdf-mrc-compression/releases/download/v0.2.0/SHA256SUMS)
+当前版本：**[v0.3.0](https://github.com/dongyaotalk/pdf-mrc-compression/releases/tag/v0.3.0)** · [下载 ZIP](https://github.com/dongyaotalk/pdf-mrc-compression/releases/download/v0.3.0/pdf-mrc-compression-0.3.0.zip) · [SHA256SUMS](https://github.com/dongyaotalk/pdf-mrc-compression/releases/download/v0.3.0/SHA256SUMS)
 
-**v0.2.0 新增可见 PDF 备份：** 修改已有文件前，将独立备份保存到输入 PDF 同级的
-`pdf-mrc-backups/`，校验大小和 SHA-256，并保留阶段及恢复记录。
-详情见 [备份工具与位置规则](references/backups-and-work-files.md) 和 [变更记录](CHANGELOG.md)。
+**v0.3.0：扫描书籍工作流升级。** 新增显式 JSON 计划工具，处理页面尺寸、原生黑白编码与稀疏灰阶、书签/标签和成品清理。按任务选择验证，连续编辑可复用可靠的可见基线备份。
+详情见 [整书工作流](references/book-workflow.md) 和 [变更记录](CHANGELOG.md)。
 
-面向 Codex 的扫描 PDF MRC 压缩 skill，包含分层策略、画面修复经验，以及可单独运行的审计、可见备份、像素比对和 JBIG2 区域编码脚本。
-
-它帮助在文件体积、字形、插图颜色和阅读速度之间作出可验证的选择。**随附脚本不是整本一键 MRC 分割器**；自动分层实现需要根据实际书页编排。
+面向 Codex 的扫描 PDF 优化 skill，帮助在字形、插图颜色、体积和阅读速度之间作出有证据的选择。随附工具有明确支持边界；复杂彩色扫描仍需根据样本设计 MRC 分层，不是任意书籍的一键自动分割器。
 
 ## 能做什么
 
 - 审计图像、蒙版、共享资源、页面几何、有效 DPI 和编码体积。
+- 等比统一正常页面尺寸、修复明确的单扫描放置错误，不重采样原图。
+- 在原生网格生成 G4/generic JBIG2，按明确预算保留稀疏灰阶，复杂页保留原样。
+- 独立修改层级书签和页码标签；附属书签用“书名”“版权”，保留手工导航。
+- 按范围清理成品目录，保留 PDF 和指定处理说明；备份需明确选择才删除。
 - 修改已有 PDF 前，在输入文件旁保存可见、独立且经过校验的备份。
 - 指导扫描页的 MRC 分层，处理文字粘连、插图漏抠、灰条和灰色题字。
 - 对已有 MRC 文件尝试结构、编码及资源复用优化，并比较渲染速度。
@@ -46,7 +47,7 @@ New-Item -ItemType Directory -Force $skillDir | Out-Null
 git clone https://github.com/dongyaotalk/pdf-mrc-compression.git (Join-Path $skillDir 'pdf-mrc-compression')
 ```
 
-也可下载 [v0.2.0 ZIP](https://github.com/dongyaotalk/pdf-mrc-compression/releases/download/v0.2.0/pdf-mrc-compression-0.2.0.zip)，核对同页的 [SHA256SUMS](https://github.com/dongyaotalk/pdf-mrc-compression/releases/download/v0.2.0/SHA256SUMS)，将其中的 `pdf-mrc-compression` 文件夹放入上述目录。重新打开 Codex 后，在新对话中使用：
+也可下载 [v0.3.0 ZIP](https://github.com/dongyaotalk/pdf-mrc-compression/releases/download/v0.3.0/pdf-mrc-compression-0.3.0.zip)，核对同页的 [SHA256SUMS](https://github.com/dongyaotalk/pdf-mrc-compression/releases/download/v0.3.0/SHA256SUMS)，将其中的 `pdf-mrc-compression` 文件夹放入上述目录。重新打开 Codex 后，在新对话中使用：
 
 ```text
 使用 $pdf-mrc-compression 评估这份扫描 PDF，保留彩色插图，
@@ -135,6 +136,32 @@ git clone https://github.com/dongyaotalk/pdf-mrc-compression.git (Join-Path $ski
 输出到 output/book-covers.pdf，更新受插页影响的书签和链接，并验证正文内容未变。
 ```
 
+### 8. 整套书沿用前册策略
+
+```text
+使用 $pdf-mrc-compression 优化这套扫描书。第 1–3 册已有压缩版，请提取已用策略，对第 4–7 册做相同处理。
+先审计正常正文尺寸、异常旋转、灰阶/颜色与共享资源。按实际页面判断是否适合原生黑白编码，保护连续灰阶和插图。
+压缩后补齐原书目录层级及封面、书名、版权、分部扉页、封底；没有实际版权内容的册不加版权书签。
+页码标签根据每册实际正文与印刷起号设置；先给出映射方案，再按确认方案执行。
+处理说明只记录做了哪些处理，不包含目录位置、机器路径或完整书目目录。
+```
+
+### 9. 只改标签，保留手工书签
+
+```text
+使用 $pdf-mrc-compression 只修改 ready.pdf 的页面标签，保留我已手动调整的所有书签。
+物理第 1–3 页用 A、B、C，第 4–19 页用大写罗马数字 I–XVI，第 20 页开始用阿拉伯数字 1 起，后附页与封底继续数字。
+页面顺序已经确认，不用额外校验，直接修改并记录未验证；不要重新压缩正文或跑全书渲染。
+```
+
+### 10. 清理交付目录
+
+```text
+使用 $pdf-mrc-compression 清理指定的这本书目录：保留所有成品 PDF 和处理说明，删除其余本任务文件。
+处理说明只保留实际完成的处理，不包含目录位置、缓存、日志或完整章节目录。
+我也授权删除这次任务的备份及恢复包，不要另建隐藏副本，不处理其他书籍目录。
+```
+
 ## 运行依赖和脚本
 
 需要修改已有 PDF（例如书签或页码标签）时，备份放在**输入文件同级的可见
@@ -160,7 +187,7 @@ python3 -m venv .venv
 ```
 
 Windows 使用 `py -3 -m venv .venv`，将 `.venv/bin/python` 换成 `.\.venv\Scripts\python.exe`。
-路径有空格时加引号。四个脚本均提供 `--help`。
+路径有空格时加引号。所有 CLI 均提供 `--help`。
 
 | 工具 | 用途与依赖 |
 |---|---|
@@ -168,7 +195,22 @@ Windows 使用 `py -3 -m venv .venv`，将 `.venv/bin/python` 换成 `.\.venv\Sc
 | `backup_pdf.py` | 在输入文件旁保存独立备份及恢复记录；仅需 Python 标准库 |
 | `verify_lossless.py` | 相同返回 `0`，不一致或失败返回 `1`，参数错误返回 `2`；需要 PyMuPDF |
 | `encode_jbig2_region.py` | 二值图 → 可嵌入 PDF 的 `.jb2` 码流；需要 Pillow 和 `jbig2enc` 的 `jbig2` |
+| `normalize_pages.py` | 显式几何计划，原图不重采样；需要 PyMuPDF |
+| `compress_scans.py` | 显式页选择、G4/generic JBIG2 与有限灰阶保护；需要 PyMuPDF、Pillow；JBIG2 另需 jbig2enc |
+| `set_navigation.py` | 独立书签/标签计划，不重编码扫描；需要 PyMuPDF |
+| `cleanup_outputs.py` | 有界清理，默认预览，`--apply` 才删除；仅需标准库 |
 | `qpdf`、Poppler | PDF 结构检查和独立渲染验证；不由上述脚本自动执行 |
+
+新工具的计划例子、命令和支持边界见 [页面几何](references/page-geometry.md)、[原生扫描编码](references/segmentation-and-repairs.md)、[导航与标签](references/navigation-and-labels.md) 和 [清理](references/backups-and-work-files.md)。计划中的页码均为从 1 开始的物理页。
+
+```bash
+python scripts/normalize_pages.py input.pdf sized.pdf --plan geometry.json
+python scripts/compress_scans.py sized.pdf compact.pdf --plan compression.json --cache work/encoding
+python scripts/set_navigation.py compact.pdf ready.pdf --plan navigation.json
+python scripts/cleanup_outputs.py books --plan cleanup.json
+```
+
+压缩工具默认核对实际嵌入对象的原生目标像素，不自动完成结构与全部画面检查。仅元数据任务不要求全书图像校验；明确跳过校验会如实记录。连续编辑可加同一 `--session work/session.json`，备份仍在 PDF 同级可见目录。
 
 `mask.jb2` 不是 PDF 或独立 JBIG2 图像文件。嵌入 PDF 后还要验证极性、原生像素及实际渲染。
 `--native-images` 要求页面资源名稳定且无歧义，不适合任意重建了资源树的 PDF。
@@ -177,6 +219,9 @@ Windows 使用 `py -3 -m venv .venv`，将 `.venv/bin/python` 换成 `.\.venv\Sc
 ## 文档
 
 - [工作流程与质量边界](SKILL.md)
+- [整套书籍工作流](references/book-workflow.md)
+- [页面几何](references/page-geometry.md)
+- [导航与标签](references/navigation-and-labels.md)
 - [依赖与跨平台运行](references/environment-and-dependencies.md)
 - [备份与工作文件位置](references/backups-and-work-files.md)
 - [分层和画面修复](references/segmentation-and-repairs.md)

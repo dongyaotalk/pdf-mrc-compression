@@ -48,10 +48,10 @@ python tools/build_release.py
    确认 Release 为正式发布且标记为 Latest：
 
 ```bash
-git tag -a v0.2.0 -m 'Release v0.2.0'
-git push origin v0.2.0
-gh release create v0.2.0 dist/pdf-mrc-compression-0.2.0.zip dist/SHA256SUMS \
-  --verify-tag --latest --title 'v0.2.0' --notes-file /path/to/release-notes.md
+git tag -a v0.3.0 -m 'Release v0.3.0'
+git push origin v0.3.0
+gh release create v0.3.0 dist/pdf-mrc-compression-0.3.0.zip dist/SHA256SUMS \
+  --verify-tag --latest --title 'v0.3.0' --notes-file /path/to/release-notes.md
 ```
 
 将示例版本与 release notes 路径替换为本次实际值。GitHub 发布由维护者显式执行；
