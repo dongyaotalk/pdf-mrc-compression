@@ -29,6 +29,10 @@ python tools/build_release.py
 本地运行依赖的最低声明是 PyMuPDF 1.24.3 和 Pillow 10；它们不是每个操作系统
 均已测试的版本组合。CI 通过包解析选择可安装版本，输出实际 Python 和包版本。
 最低依赖组合另在 Linux/Python 3.10 测试。
+macOS CI 使用官方标准 `macos-15-intel` runner，保留 macOS 测试门槛；
+切换原因是 ARM 托管容量不足导致作业在多次尝试后仍未被领取。
+这不代表当前版本已覆盖所有 macOS 架构；runner 标签见
+[GitHub 官方说明](https://docs.github.com/en/actions/reference/runners/github-hosted-runners)。
 
 ## 提交内容
 

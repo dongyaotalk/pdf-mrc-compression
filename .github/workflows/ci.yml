@@ -20,7 +20,8 @@ jobs:
       matrix:
         include:
           - {os: ubuntu-latest, python: '3.12', deps: latest}
-          - {os: macos-latest, python: '3.12', deps: latest}
+          # ARM hosted capacity can leave jobs unacquired; keep macOS coverage on Intel.
+          - {os: macos-15-intel, python: '3.12', deps: latest}
           - {os: windows-latest, python: '3.12', deps: latest}
           - {os: ubuntu-latest, python: '3.10', deps: minimum}
           - {os: ubuntu-latest, python: '3.14', deps: latest}
