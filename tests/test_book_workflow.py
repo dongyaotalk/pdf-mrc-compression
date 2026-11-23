@@ -105,16 +105,40 @@ class BookPlans(unittest.TestCase):
             xref = doc[0].get_images()[0][0]
             before = doc.xref_stream_raw(xref)
             old_to = doc[0].get_links()[0]['to']
+            old_toc = doc.get_toc(False)
             normalize_pages.normalize(doc, {'size': [200, 300]})
             self.assertEqual(doc.xref_stream_raw(xref), before)
             self.assertIn('OCR evidence', doc[0].get_text())
             self.assertEqual(doc[1].rotation, 90)
             self.assertEqual(tuple(doc[0].mediabox), (0, 0, 200, 300))
             self.assertEqual(doc.get_toc()[1][1], 'Landscape')
+            for row, factor in zip(doc.get_toc(False), (.5, 5)):
+                original = old_toc[0 if row[1] == 'Book' else 1]
+                self.assertEqual(row[3]['xref'], original[3]['xref'])
+                self.assertAlmostEqual(row[3]['to'].x, original[3]['to'].x * factor)
+                self.assertAlmostEqual(row[3]['to'].y, original[3]['to'].y * factor)
             saved = doc.tobytes()
         with fitz.open(stream=saved, filetype='pdf') as doc:
             self.assertAlmostEqual(doc[0].get_links()[0]['from'].x0, 5)
             self.assertAlmostEqual(doc[0].get_links()[0]['to'].x, old_to.x * 5)
+
+    def test_geometry_partial_selection_keeps_rotated_link_endpoints(self):
+        for selected, rotated in ((1, 2), (2, 1)):
+            with self.subTest(selected=selected), scan_doc(Image.new('L', (40, 60), 255), 2) as doc:
+                doc[rotated-1].set_rotation(90)
+                doc[0].insert_link({'kind': fitz.LINK_GOTO, 'from': fitz.Rect(2, 4, 10, 14),
+                                    'page': 1, 'to': fitz.Point(10, 20)})
+                raw = doc.tobytes()
+            with fitz.open(stream=raw, filetype='pdf') as doc:
+                before = doc[0].get_links()[0]
+                normalize_pages.normalize(doc, {'size': [80, 120], 'pages': [selected]})
+                raw = doc.tobytes()
+            with fitz.open(stream=raw, filetype='pdf') as doc:
+                after = doc[0].get_links()[0]
+                self.assertAlmostEqual(after['from'].x0, before['from'].x0 * (2 if selected == 1 else 1))
+                self.assertAlmostEqual(after['from'].y0, before['from'].y0 * (2 if selected == 1 else 1))
+                self.assertAlmostEqual(after['to'].x, before['to'].x * (2 if selected == 2 else 1))
+                self.assertAlmostEqual(after['to'].y, before['to'].y * (2 if selected == 2 else 1))
 
     def test_explicit_scan_rotation_repair_and_complex_page_rejection(self):
         image = Image.new('L', (40, 60), 255)

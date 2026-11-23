@@ -62,11 +62,38 @@ def normalize(doc, plan):
         old_width, old_height = page.mediabox.width, page.mediabox.height
         scale = min(width / old_width, height / old_height)
         dx, dy = (width - old_width * scale) / 2, (height - old_height * scale) / 2
-        transforms[index] = (fitz.Matrix(scale, 0, 0, scale, dx, dy),
-                             page.derotation_matrix, page.rotation)
+        mapping = fitz.Matrix(scale, 0, 0, scale, dx, dy)
+        if index in repairs:
+            old_image = fitz.Matrix(image_info[0]['transform'])
+            if abs(old_image.a * old_image.d - old_image.b * old_image.c) < 1e-12:
+                raise ValueError('Degenerate scan placement')
+            rect = repairs[index]
+            mapping = ~old_image * fitz.Matrix(rect.width, 0, 0, rect.height, rect.x0, rect.y0)
+        transforms[index] = (mapping, page.derotation_matrix, page.rotation)
     # Named internal destinations cannot be safely relocated by this helper.
     if transforms and any(link['kind'] == fitz.LINK_NAMED for group in links for link in group):
         raise ValueError('Named destinations require an explicit geometry adapter')
+    destinations = {}
+    def remember_destination(detail):
+        path = 'A/D'
+        kind, value = doc.xref_get_key(detail['xref'], path)
+        if kind == 'null':
+            path = 'Dest'
+            kind, value = doc.xref_get_key(detail['xref'], path)
+        match = re.fullmatch(r'\[\s*(\d+\s+\d+\s+R)\s*/XYZ\s+([-+\d.eE]+)\s+([-+\d.eE]+)\s+(null|[-+\d.eE]+)\s*\]', value)
+        if kind != 'array' or not match:
+            raise ValueError('Changed destinations require explicit numeric XYZ coordinates')
+        destinations[detail['xref']] = (path, match[1], match[4], detail['page'], detail.get('to', fitz.Point()))
+    for index, group in enumerate(links):
+        for link in group:
+            if index in transforms and doc.xref_get_key(link['xref'], 'QuadPoints')[0] != 'null':
+                raise ValueError('Link quadrilaterals require a geometry adapter')
+            if link['kind'] == fitz.LINK_GOTO and link.get('page') in transforms:
+                remember_destination(link)
+    for entry in toc:
+        detail = entry[3]
+        if detail.get('kind') == fitz.LINK_GOTO and detail.get('page') in transforms:
+            remember_destination(detail)
     for index in selected:
         page = doc[index]
         transform, _, _ = transforms[index]
@@ -99,22 +126,17 @@ def normalize(doc, plan):
         return mapped * doc[number].rotation_matrix if rotated else mapped
     for index, group in enumerate(links):
         for link in group:
-            changed = False
             if index in transforms:
-                # get_links source rectangles use the page's rotated space.
-                link['from'] = (link['from'] * transforms[index][1] * transforms[index][0])
-                changed = True
-            if link['kind'] == fitz.LINK_GOTO and link.get('page') in transforms:
-                link['to'] = destination(link['page'], link.get('to', fitz.Point()), rotated=False)
-                changed = True
-            if changed:
-                doc[index].update_link(link)
-    if toc:
-        for entry in toc:
-            detail = entry[3]
-            if detail.get('kind') == fitz.LINK_GOTO and detail.get('page') in transforms:
-                detail['to'] = destination(detail['page'], detail.get('to', fitz.Point()))
-        doc.set_toc(toc)
+                # Patch only Rect, preserving the original action and link
+                # appearance. Old update_link versions used the source page's
+                # coordinate transform for the destination as well.
+                rect = link['from'] * transforms[index][1] * transforms[index][0]
+                rect = rect * ~doc[index].transformation_matrix
+                doc.xref_set_key(link['xref'], 'Rect', '[' + ' '.join(f'{v:.9g}' for v in rect) + ']')
+    for xref, (path, reference, zoom, target, point) in destinations.items():
+        point = destination(target, point, rotated=False)
+        point = point * ~doc[target].transformation_matrix
+        doc.xref_set_key(xref, path, f'[{reference} /XYZ {point.x:.9g} {point.y:.9g} {zoom}]')
     return {'changed_physical_pages': [p + 1 for p in selected], 'size_points': [width, height],
             'validation': 'plan preflight only; inspect geometry and rendering separately'}
 
