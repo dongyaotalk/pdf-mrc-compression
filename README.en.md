@@ -2,22 +2,13 @@
 
 [简体中文](README.md) · [Skill instructions](SKILL.md) · [Releases](https://github.com/dongyaotalk/pdf-mrc-compression/releases)
 
-Current version: **[v0.2.0](https://github.com/dongyaotalk/pdf-mrc-compression/releases/tag/v0.2.0)** · [Download ZIP](https://github.com/dongyaotalk/pdf-mrc-compression/releases/download/v0.2.0/pdf-mrc-compression-0.2.0.zip) · [SHA256SUMS](https://github.com/dongyaotalk/pdf-mrc-compression/releases/download/v0.2.0/SHA256SUMS)
+Current version: **[v0.3.0](https://github.com/dongyaotalk/pdf-mrc-compression/releases/tag/v0.3.0)** · [Download ZIP](https://github.com/dongyaotalk/pdf-mrc-compression/releases/download/v0.3.0/pdf-mrc-compression-0.3.0.zip) · [SHA256SUMS](https://github.com/dongyaotalk/pdf-mrc-compression/releases/download/v0.3.0/SHA256SUMS)
 
-**New in v0.2.0: visible PDF backups.** Before editing an existing PDF, save an
-independent copy in `pdf-mrc-backups/` beside the input, verify its size and SHA-256,
-and retain stage and recovery records. See the [backup guide](references/backups-and-work-files.md)
-and [changelog](CHANGELOG.md).
+**New in v0.3.0: scanned-book workflows.** Explicit JSON plans now support page geometry, native-grid G4/generic JBIG2 with sparse-gray protection, bookmarks/page labels, and bounded cleanup. Validation follows the operation; continuous edits can reuse a verified visible baseline backup. See the [book workflow](references/book-workflow.md) and [changelog](CHANGELOG.md).
 
-A Codex skill for scanned-PDF Mixed Raster Content (MRC) compression, image repairs,
-and measured tradeoffs between size, fidelity, and rendering speed. The skill
-instructions and detailed references are written in Chinese; the Python CLIs
-provide English help and diagnostics.
+A Codex skill for scanned-PDF MRC compression, image repairs, and measured tradeoffs between size, fidelity, and rendering speed. Instructions and detailed references are in Chinese; Python CLIs provide English help and diagnostics.
 
-Includes four standalone helpers: PDF resource auditing, visible backups, pixel comparison,
-and lossless generic JBIG2 region encoding. **This is not a turnkey whole-book MRC
-segmenter.** Segmentation and protected illustration regions must be tailored to
-the actual pages.
+The native scan path has deliberate support limits and preserves unsupported pages. Complex color segmentation and illustration protection still need plans based on actual samples. This is not a general-purpose automatic MRC segmenter. Native text/vector PDFs are not rasterized just to use this skill.
 
 ## Install
 
@@ -31,8 +22,8 @@ git clone https://github.com/dongyaotalk/pdf-mrc-compression.git \
   "${CODEX_HOME:-$HOME/.codex}/skills/pdf-mrc-compression"
 ```
 
-Alternatively, download the [v0.2.0 ZIP](https://github.com/dongyaotalk/pdf-mrc-compression/releases/download/v0.2.0/pdf-mrc-compression-0.2.0.zip), verify it
-against [SHA256SUMS](https://github.com/dongyaotalk/pdf-mrc-compression/releases/download/v0.2.0/SHA256SUMS), and extract its `pdf-mrc-compression` directory into your
+Alternatively, download the [v0.3.0 ZIP](https://github.com/dongyaotalk/pdf-mrc-compression/releases/download/v0.3.0/pdf-mrc-compression-0.3.0.zip), verify it
+against [SHA256SUMS](https://github.com/dongyaotalk/pdf-mrc-compression/releases/download/v0.3.0/SHA256SUMS), and extract its `pdf-mrc-compression` directory into your
 skills directory. Reopen Codex and invoke it in a new chat:
 
 ```text
@@ -127,6 +118,31 @@ Align the inside front to the left and the inside back to the right. Reuse the o
 Save output/book-covers.pdf, update bookmarks and links affected by inserted pages, and verify that body content is unchanged.
 ```
 
+### 8. Continue a multi-volume book using earlier volumes
+
+```text
+Use $pdf-mrc-compression to optimize this scanned series. Volumes 1–3 already have compressed editions; extract their actual strategy and apply it to volumes 4–7.
+Audit normal body sizes, unusual rotation, gray/color content and shared resources. Use native bilevel encoding only where appropriate; protect continuous tones and illustrations.
+After compression, restore the printed contents hierarchy and actual cover, title, copyright, division-title and back-cover bookmarks. Use the exact auxiliary names “书名” and “版权”; do not invent copyright bookmarks for blank pages.
+Propose physical-page mappings and labels based on each volume's printed numbering before applying them. Processing notes should describe operations without machine paths or a full contents listing.
+```
+
+### 9. Change labels only, keeping manual bookmarks
+
+```text
+Use $pdf-mrc-compression to change only the page labels in ready.pdf. Keep all my manually edited bookmarks.
+Physical pages 1–3 use A, B, C; pages 4–19 use uppercase Roman I–XVI; page 20 starts Arabic 1, continuing through end matter and the back cover.
+The page order is already confirmed. Skip extra validation, apply the change directly and record it as unvalidated. Do not recompress or render the entire book.
+```
+
+### 10. Clean the delivery directory
+
+```text
+Use $pdf-mrc-compression to clean this book's specified directory. Keep all final PDFs and the processing notes; remove the remaining files belonging to this task.
+Keep only completed operations in the notes, without storage locations, caches, logs or a complete chapter listing.
+I also authorize removing this task's backups and recovery archives. Do not create hidden replacement backups or touch other books.
+```
+
 ## Dependencies and CLI use
 
 Before modifying an existing PDF (for example, its bookmarks or page labels),
@@ -157,6 +173,28 @@ All scripts support `--help`. Auditing and comparison require PyMuPDF; encoding
 requires Pillow and the `jbig2` executable from jbig2enc.
 The backup helper needs only Python's standard library and never modifies the PDF.
 
+Additional plan-based tools (all physical page numbers are **1-based**):
+
+| Tool | Scope |
+|---|---|
+| `normalize_pages.py` | Aspect-fit page size, explicit single-scan placement repair; no image resampling |
+| `compress_scans.py` | Selected native scans, G4/generic JBIG2, bounded sparse-gray protection |
+| `set_navigation.py` | Explicit bookmarks and/or label segments; omitted structures stay intact |
+| `cleanup_outputs.py` | Keep PDFs and named notes; preview by default, `--apply` to delete; backups need explicit selection |
+
+```bash
+python scripts/normalize_pages.py input.pdf sized.pdf --plan geometry.json
+python scripts/compress_scans.py sized.pdf compact.pdf --plan compression.json --cache work/encoding
+python scripts/set_navigation.py compact.pdf ready.pdf --plan navigation.json
+python scripts/cleanup_outputs.py books --plan cleanup.json
+```
+
+For example, `compression.json` can contain `{"pages": [4, 5], "codec": "g4", "max_gray_pixels": 8}`: it preserves binary pixels and at most eight gray pixels per selected image, keeping continuous-tone images unchanged. Binarization requires an explicit `threshold` and changes the baseline. Default checks compare installed native target pixels; `--skip-validation` explicitly records that checks were skipped. Structure and representative independent rendering remain separate delivery checks.
+
+A labels-only plan might be `{"labels": [{"page": 1, "style": "A"}, {"page": 4, "style": "D", "first": 773}]}`. It keeps existing bookmarks. A provided `bookmarks` array replaces the tree, so omit it when preserving manual edits. See [geometry](references/page-geometry.md), [scan encoding](references/segmentation-and-repairs.md), [navigation](references/navigation-and-labels.md), and [cleanup](references/backups-and-work-files.md) for complete examples and limits.
+
+The three PDF editing tools accept `--session work/session.json` to reuse a verified visible backup within one continuous task; external changes invalidate reuse. Metadata-only work does not require whole-book raster validation. Processing notes describe completed operations, without directory paths or log dumps.
+
 The encoder accepts black ink (0) on white paper (255). It never thresholds gray
 pixels or substitutes symbols. Its output is a PDF-ready stream, not a PDF or
 standalone JBIG2 file. Validate polarity and rendering after embedding.
@@ -175,6 +213,9 @@ rasterizing them just to apply MRC.
 ## References and development
 
 Start with [SKILL.md](SKILL.md), then read the relevant references on
+[book workflows](references/book-workflow.md),
+[page geometry](references/page-geometry.md),
+[navigation and labels](references/navigation-and-labels.md),
 [backups and work files](references/backups-and-work-files.md),
 [segmentation](references/segmentation-and-repairs.md),
 [lossless optimization and speed](references/lossless-and-speed.md), or

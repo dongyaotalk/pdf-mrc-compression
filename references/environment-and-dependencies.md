@@ -7,9 +7,9 @@
 | 依赖 | 需要它的功能 | 必需程度 |
 |---|---|---|
 | Python 3.10+ | 所有随附脚本 | 必需；实际平台和版本验证范围见仓库 CI，其他组合以包支持和小样结果为准 |
-| Python 标准库 | `backup_pdf.py` 的可见备份、字节复制与 SHA-256 校验 | 仅备份时无需安装下列 PDF、图像或原生依赖 |
-| PyMuPDF，安装名 `PyMuPDF`，导入名 `pymupdf` | PDF 资源审计、逐页及原生图片比对 | 运行 `audit_pdf.py`、`verify_lossless.py` 必需 |
-| Pillow，安装名 `Pillow`，导入名 `PIL` | 二值 PNG 输入和区域编码；部分图像处理 | 运行 `encode_jbig2_region.py` 必需 |
+| Python 标准库 | `backup_pdf.py` 的可见备份、字节复制与 SHA-256 校验，以及 `cleanup_outputs.py` | 仅备份/清理时无需安装下列 PDF、图像或原生依赖 |
+| PyMuPDF，安装名 `PyMuPDF`，导入名 `pymupdf` | PDF 资源审计、逐页及原生图片比对 | 审计、比对、几何、扫描压缩和导航工具必需 |
+| Pillow，安装名 `Pillow`，导入名 `PIL` | 二值 PNG 输入和区域编码；部分图像处理 | 区域编码和 `compress_scans.py` 必需 |
 | `jbig2enc` 提供的 `jbig2` 可执行文件 | 无字形替换的 generic JBIG2 蒙版编码 | 采用 JBIG2 策略时必需；不是 Python 包 |
 | `qpdf` 可执行文件 | 对象流/Flate 整理、PDF 结构检查 | 该优化及完整交付的结构检查需要 |
 | Poppler 的 `pdftoppm`；`pdfinfo` 可辅助检查 | 与 PyMuPDF 独立的渲染验证、页面信息 | 完整交付的独立渲染检查需要 `pdftoppm` |
@@ -108,3 +108,7 @@ jpegtran -version
 - 缺 qpdf 或 Poppler：明确标注未完成结构检查或独立渲染检查，不声称完成了完整交付验证。
 
 历史测试环境不代表所有平台都已实测。新平台要记录操作系统、Python 和工具版本，以及样本结果；内存和并发按原生图像尺寸测量，不固定为某台电脑的配置。
+
+## 已知旧版读取差异
+
+PyMuPDF 1.24.3 的 `Page.get_label()` 将从 1 起的字母标签读为 B、C、D；本项目仍写规范的 `/S /A`、起号 1（或省略默认值），不以非法起号 0 抵消读取错误。使用该版本核对时检查 `get_page_labels()` 的段规则或使用独立阅读器；较新版本同时测试格式化结果。Windows 原地保存需先关闭 MuPDF 输入句柄再替换，随附工具通过临时文件完成这一操作。

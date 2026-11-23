@@ -29,6 +29,11 @@ python tools/build_release.py
 本地运行依赖的最低声明是 PyMuPDF 1.24.3 和 Pillow 10；它们不是每个操作系统
 均已测试的版本组合。CI 通过包解析选择可安装版本，输出实际 Python 和包版本。
 最低依赖组合另在 Linux/Python 3.10 测试。
+macOS CI 使用官方标准 `macos-15-intel` runner，保留 macOS 测试门槛；
+切换原因是 ARM 托管容量不足导致作业在多次尝试后仍未被领取。
+Intel 作业解析该平台可用的最新 PyMuPDF/Pillow wheel，避免缺少 Intel wheel 的新版触发完整 C/C++ 源码构建；Linux/Windows 最新依赖及 Linux 最低依赖检查保留。
+这不代表当前版本已覆盖所有 macOS 架构；runner 标签见
+[GitHub 官方说明](https://docs.github.com/en/actions/reference/runners/github-hosted-runners)。
 
 ## 提交内容
 
@@ -48,10 +53,10 @@ python tools/build_release.py
    确认 Release 为正式发布且标记为 Latest：
 
 ```bash
-git tag -a v0.2.0 -m 'Release v0.2.0'
-git push origin v0.2.0
-gh release create v0.2.0 dist/pdf-mrc-compression-0.2.0.zip dist/SHA256SUMS \
-  --verify-tag --latest --title 'v0.2.0' --notes-file /path/to/release-notes.md
+git tag -a v0.3.0 -m 'Release v0.3.0'
+git push origin v0.3.0
+gh release create v0.3.0 dist/pdf-mrc-compression-0.3.0.zip dist/SHA256SUMS \
+  --verify-tag --latest --title 'v0.3.0' --notes-file /path/to/release-notes.md
 ```
 
 将示例版本与 release notes 路径替换为本次实际值。GitHub 发布由维护者显式执行；
